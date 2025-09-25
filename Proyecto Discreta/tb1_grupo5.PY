@@ -69,10 +69,16 @@ class Operaciones:
         self.__lista_usuarios.append(usuario)
         
     def guardar_propuesta(self, propuesta):
+        # Verificar que el código no se repita
+        for p in self.__lista_propuestas:
+            if p.codigo == propuesta.codigo:
+                print(f"⚠️ Ya existe una propuesta con el código {propuesta.codigo}. No se puede agregar.")
+                return False
         self.__lista_propuestas.append(propuesta)
+        return True
     
     def imprimir_propuestas(self):
-        limpiar()
+        #limpiar()
         print("-"*50)
         print("VER DETALLES DE VOTOS Y PROPUESTAS".center(50))
         print("-"*50)
@@ -88,7 +94,7 @@ class Operaciones:
         input("Presione una tecla para continuar...")
             
     def crear_propuesta(self):
-        limpiar()
+        #limpiar()
         print("-"*50)
         print("CREAR PROPUESTA".center(50))
         print("-"*50)
@@ -97,10 +103,15 @@ class Operaciones:
         
         for i in range(cantidad):
             print("-"*50)
-            nombre = input("Nombre de la propuesta: ")
-            codigo = input("Código (4 dígitos): ").upper()
+            nombre = input(f"Nombre de la propuesta {i}: ")
+            while True:
+                codigo = input("Código (4 dígitos): ").upper()
+                # Verificar unicidad del código
+                if any(p.codigo == codigo for p in self.__lista_propuestas):
+                    print(f"⚠️ Ya existe una propuesta con el código {codigo}. Ingrese otro.")
+                else:
+                    break
             criterios = {}
-            
             print("1. Tecnológico\n2. Politico\n3. Educativo\n4. Salir")
             while True:
                 opcion = input("Seleccione criterio: ")
@@ -115,57 +126,62 @@ class Operaciones:
                 else:
                     print("⚠️ Opción inválida")
                 print("AGREGADO.......")
-                
             propuesta = Propuesta(nombre, codigo, criterios)
             self.guardar_propuesta(propuesta)
             
     def votar_propuesta(self):
-        
-        limpiar()
+        # Un usuario no puede votar por la misma propuesta 2 veces
         print("-"*50)
-        print("REGISTRE SU IDENTIDAD ANTES DE VOTAR". center(50))
+        print("REGISTRE SU IDENTIDAD ANTES DE VOTAR".center(50))
         print("-"*50)
         try:
-            while True: 
+            while True:
                 id = input("Ingrese su DNI: ")
-                if len(id) == 8  and id.isdigit(): 
-                    break 
+                if len(id) == 8 and id.isdigit():
+                    break
         except ValueError:
             print("Error en el ingreso de datos........")
-            
-        try: 
-            nombre = input("Nombre de Usuario: ").title() 
-        except ValueError: 
+            return
+        try:
+            nombre = input("Nombre de Usuario: ").title()
+        except ValueError:
             print("Error en el ingreso de datos .......")
-            
-        usuario = Usuario(id,nombre)
+            return
+        usuario = Usuario(id, nombre)
         self.guardar_usuarios(usuario)
         contador = 0
         for p in self.__lista_propuestas:
             contador += 1
-            print(F"PROPUESTA N° {contador}".center(50))
+            print(f"PROPUESTA N° {contador}".center(50))
             print("-"*50)
             print(f"CODIGO: {p.codigo} - NOMBRE: {p.nombre}")
             for c, v in p.criterios.items():
                 print(f"+ {c:<10}")
             print("-"*50)
             print("VOTOS:", len(p.votos))
-            
         codigo = input("Ingrese el código de la propuesta a votar: ")
-        
         for p in self.__lista_propuestas:
             if p.codigo == codigo:
+                # Revisar si el usuario ya votó por esta propuesta
+                ya_voto = False
                 for criterio in p.criterios.keys():
-                    p.criterios[criterio].append(usuario.nombre) 
+                    if usuario.nombre in p.criterios[criterio]:
+                        ya_voto = True
+                        break
+                if ya_voto:
+                    print("⚠️ Usted ya ha votado por esta propuesta.")
+                    return
+                for criterio in p.criterios.keys():
+                    p.criterios[criterio].append(usuario.nombre)
                 voto = f"{usuario.id}-->{usuario.nombre}"
-                p.votar(voto) 
+                p.votar(voto)
                 print("✅ Voto registrado")
-                return     
+                return
         print("⚠️ Propuesta no encontrada")
 
 
     def contar_votantes_por_criterio(self):
-        limpiar()
+        #limpiar()
         print("-"*50)
         print("CONTAR VOTANTES POR CRITERIO".center(50))
         print("-"*50)
@@ -184,7 +200,109 @@ class Operaciones:
         print(tabulate(tabla, headers= cabezales, tablefmt="grid"))
         input("Presione una tecla para continuar...")
     
+    def mostrar_union_votantes(self):
+        #limpiar()
+        print("-"*50)
+        print("MOSTRAR UNIÓN DE VOTANTES SEGUN CRITERIO O PROPUESTA".center(50))
+        print("-"*50)
+        
+        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} 
+        
+        for p in self.__lista_propuestas:
+            for criterio, votantes in p.criterios.items(): 
+                conteo[criterio].update(votantes) 
+        
+        tabla = [] 
+        for criterio, votantes in conteo.items():
+            tabla.append([criterio, len(votantes), ', '.join(votantes)])
+        cabezales = ["Criterio", "Número de Votantes", "Nombres de Votantes"]
+        
+        print(tabulate(tabla, headers= cabezales, tablefmt="grid"))
+        input("Presione una tecla para continuar...")
+        
+        
+    def mostrar_interseccion_votantes(self):
+        #limpiar()
+        print("-"*50)
+        print("MOSTRAR INTERSECCIÓN DE VOTANTES SEGUN CRITERIO O PROPUESTA".center(50))
+        print("-"*50)
+        
+        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} 
+        
+        for p in self.__lista_propuestas:
+            for criterio, votantes in p.criterios.items(): 
+                conteo[criterio].update(votantes) 
+        
+        tabla = [] 
+        for criterio, votantes in conteo.items():
+            tabla.append([criterio, len(votantes), ', '.join(votantes)])
+        cabezales = ["Criterio", "Número de Votantes", "Nombres de Votantes"]
+        
+        print(tabulate(tabla, headers= cabezales, tablefmt="grid"))
+        input("Presione una tecla para continuar...")
     
+    
+    def mostrar_complementos_votantes(self):
+        #limpiar()
+        print("-"*50)
+        print("MOSTRAR COMPLEMENTOS DE VOTANTES SEGUN CRITERIO O PROPUESTA".center(50))
+        print("-"*50)
+        
+        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} 
+        
+        for p in self.__lista_propuestas:
+            for criterio, votantes in p.criterios.items(): 
+                conteo[criterio].update(votantes) 
+        
+        tabla = [] 
+        for criterio, votantes in conteo.items():
+            tabla.append([criterio, len(votantes), ', '.join(votantes)])
+        cabezales = ["Criterio", "Número de Votantes", "Nombres de Votantes"]
+        
+        print(tabulate(tabla, headers= cabezales, tablefmt="grid"))
+        input("Presione una tecla para continuar...")
+    
+    def propuesta_mayor_consenso(self):
+        #limpiar()
+        print("-"*50)
+        print("PROPUESTA CON MAYOR CONSENSO DE VOTANTES".center(50))
+        print("-"*50)
+        
+        if not self.__lista_propuestas:
+            print("No hay propuestas disponibles.")
+            return
+        
+        propuesta_mas_votada = max(self.__lista_propuestas, key=lambda p: len(p.votos))
+        
+        print(f"La propuesta con mayor consenso es '{propuesta_mas_votada.nombre}' con {len(propuesta_mas_votada.votos)} votos.")
+        input("Presione una tecla para continuar...")
+    
+    def diagrama_venn(self):
+        """
+        #limpiar()
+        print("-"*50)
+        print("DIAGRAMA DE VENN".center(50))
+        print("-"*50)
+        
+        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} 
+        
+        for p in self.__lista_propuestas:
+            for criterio, votantes in p.criterios.items(): 
+                conteo[criterio].update(votantes) 
+        
+        if len(conteo) < 2:
+            print("No hay suficientes criterios para crear un diagrama de Venn.")
+            return
+        
+        criterios = list(conteo.keys())
+        conjunto1 = conteo[criterios[0]]
+        conjunto2 = conteo[criterios[1]]
+        
+        plt.figure(figsize=(8, 8))
+        venn2([conjunto1, conjunto2], set_labels=(criterios[0], criterios[1]))
+        plt.title("Diagrama de Venn de Votantes por Criterio")
+        plt.show()
+        input("Presione una tecla para continuar...") """
     
 
 def caratula():
@@ -202,7 +320,7 @@ def caratula():
     
 
 def menu():
-    limpiar()
+    #limpiar()
     print("==========================================")
     print("      PROYECTO 3: TEORÍA DE CONJUNTOS")
     print("              Menu principal")
@@ -250,23 +368,24 @@ def main():
         elif opcion == 3:
             print("MOSTRAR UNION DE VOTANTES SEGUN CRITERIO O PROPUESTA")
             print("-"*30)
-            
+            g.mostrar_union_votantes()
         elif opcion == 4:
             print("MOSTRAR INTERSECCION DE VOTANTES SEGUN CRITERIO O PROPUESTA")
             print("-"*30)
-            
+            g.mostrar_interseccion_votantes()
         elif opcion == 5:
             print("MOSTRAR COMPLEMENTOS DE VOTANTES SEGUN CRITERIO O PROPUESTA")
             print("-"*30)
-            
+            g.mostrar_complementos_votantes()
         elif opcion == 6:
             print("PROPUESTA CON MAYOR CONSENSO DE VOTANTES")
             print("-"*30)
-        
+            g.propuesta_mayor_consenso()
         elif opcion == 7:
             print("DIAGRAMA DE VENN")
             print("-"*30)
-
+            g.diagrama_venn()
+            
         elif opcion == 8: 
             g.imprimir_propuestas()
         
