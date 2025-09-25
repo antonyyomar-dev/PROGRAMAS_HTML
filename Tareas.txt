@@ -1,0 +1,4 @@
+Verificar que una persona no pueda votar 2 veces en una 
+propuesta
+Y que si vota por un mismo criterio en esa propuesta
+ no se agregué nuevamente solo si este no existe

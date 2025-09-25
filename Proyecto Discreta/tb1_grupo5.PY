@@ -1,5 +1,4 @@
 
-
 import os
 from tabulate import tabulate
 import matplotlib.pyplot as plt
@@ -13,8 +12,6 @@ class Propuesta:
     def __init__(self, nombre= str, codigo= str, criterios=None):
         self.__nombre = nombre
         self.__codigo = codigo
-        
-        # criterios será un diccionario {criterio: votos}
         self.__criterios = criterios if criterios else {}
         self.__votos = []
     
@@ -57,34 +54,28 @@ class Usuario:
     def nombre(self):
         return self.__nombre
 
-
 class Operaciones:
     def __init__(self):
         self.__lista_usuarios = []
         self.__lista_propuestas = []
         
-    
     def existe_id (self,id):
         for e in self.__lista_usuarios:
             if e.id == id:
                 return True
         return False
     
-    
     def guardar_usuarios (self,usuario): 
         self.__lista_usuarios.append(usuario)
-        
         
     def guardar_propuesta(self, propuesta):
         self.__lista_propuestas.append(propuesta)
     
-    # Imprimir en pantalla los detalles de cada propuesta
     def imprimir_propuestas(self):
         limpiar()
         print("-"*50)
         print("VER DETALLES DE VOTOS Y PROPUESTAS".center(50))
         print("-"*50)
-        
         
         for p in self.__lista_propuestas:
             print("-"*50)
@@ -96,39 +87,40 @@ class Operaciones:
         
         input("Presione una tecla para continuar...")
             
-    
-    # Aqui se inician las propuestas y se le agregan los criterios que esta debe tener
-    
     def crear_propuesta(self):
         limpiar()
         print("-"*50)
         print("CREAR PROPUESTA".center(50))
         print("-"*50)
         
-        nombre = input("Nombre de la propuesta: ")
-        codigo = input("Código (4 dígitos): ").upper()
-        criterios = {}
+        cantidad = int(input("Ingresar la cantidad de propuestas a crear (3, 4 o 5): "))
         
-        print("1. Tecnológico\n2. Politico\n3. Educativo\n4. Salir")
-        while True:
-            opcion = input("Seleccione criterio: ")
-            if opcion == "1":
-                criterios["Tecnológico"] = []
-            elif opcion == "2":
-                criterios["Politico"] = []
-            elif opcion == "3":
-                criterios["Educativo"] = []
-            elif opcion == "4":
-                break
-            else:
-                print("⚠️ Opción inválida")
-            print("AGREGADO.......")
+        for i in range(cantidad):
+            print("-"*50)
+            nombre = input("Nombre de la propuesta: ")
+            codigo = input("Código (4 dígitos): ").upper()
+            criterios = {}
             
-        propuesta = Propuesta(nombre, codigo, criterios)
-        self.guardar_propuesta(propuesta)
-    
-    # Aqui  se realiza el voto de cada votante para una determinada propuesta
+            print("1. Tecnológico\n2. Politico\n3. Educativo\n4. Salir")
+            while True:
+                opcion = input("Seleccione criterio: ")
+                if opcion == "1":
+                    criterios["Tecnológico"] = []
+                elif opcion == "2":
+                    criterios["Politico"] = []
+                elif opcion == "3":
+                    criterios["Educativo"] = []
+                elif opcion == "4":
+                    break
+                else:
+                    print("⚠️ Opción inválida")
+                print("AGREGADO.......")
+                
+            propuesta = Propuesta(nombre, codigo, criterios)
+            self.guardar_propuesta(propuesta)
+            
     def votar_propuesta(self):
+        
         limpiar()
         print("-"*50)
         print("REGISTRE SU IDENTIDAD ANTES DE VOTAR". center(50))
@@ -136,23 +128,18 @@ class Operaciones:
         try:
             while True: 
                 id = input("Ingrese su DNI: ")
-                if len(id) == 8  and not self.existe_id(id) and id.isdigit(): 
+                if len(id) == 8  and id.isdigit(): 
                     break 
-                else:
-                    print("El id del usuario no es valido o se repite")
         except ValueError:
             print("Error en el ingreso de datos........")
             
-        
         try: 
             nombre = input("Nombre de Usuario: ").title() 
         except ValueError: 
             print("Error en el ingreso de datos .......")
             
-        
         usuario = Usuario(id,nombre)
         self.guardar_usuarios(usuario)
-
         contador = 0
         for p in self.__lista_propuestas:
             contador += 1
@@ -164,39 +151,32 @@ class Operaciones:
             print("-"*50)
             print("VOTOS:", len(p.votos))
             
-
         codigo = input("Ingrese el código de la propuesta a votar: ")
         
         for p in self.__lista_propuestas:
             if p.codigo == codigo:
                 for criterio in p.criterios.keys():
-                    p.criterios[criterio].append(usuario.nombre) # agrergamos el nombre del votante al dic de criterios
+                    p.criterios[criterio].append(usuario.nombre) 
                 voto = f"{usuario.id}-->{usuario.nombre}"
-                p.votar(voto) # se guarda el voto para la propuesta en general
-                    
+                p.votar(voto) 
                 print("✅ Voto registrado")
-                return
-            
+                return     
         print("⚠️ Propuesta no encontrada")
 
 
-    # CONTAR VOTANTES POR CADA CRITERIO EN GENERAL DE TODAS LAS PROPUESTAS Y MOSTRAR LOS NOMBRES DE LOS VOTANTES
     def contar_votantes_por_criterio(self):
         limpiar()
         print("-"*50)
         print("CONTAR VOTANTES POR CRITERIO".center(50))
         print("-"*50)
         
-        
-        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} # se define un dic con los nombres de los criterios, set() es para crear un dic con valor unico
-                                                                           # es decir si hay 3 con criterio economico, solo se contara 1 pero los votos los incrementará
-        
+        conteo = {"Tecnológico": set(), "Politico": set(), "Educativo": set()} 
         
         for p in self.__lista_propuestas:
-            for criterio, votantes in p.criterios.items(): # accedemos al dic de criterios en la calse Propuesta
-                conteo[criterio].update(votantes) # se actualiza el dic para cada nuevo valor encontrado y se agrega al diccionario un nuevo votante
+            for criterio, votantes in p.criterios.items(): 
+                conteo[criterio].update(votantes) 
         
-        tabla = [] # creamos tabla para tabulate
+        tabla = [] 
         for criterio, votantes in conteo.items():
             tabla.append([criterio, len(votantes), ', '.join(votantes)])
         cabezales = ["Criterio", "Número de Votantes", "Nombres de Votantes"]
@@ -294,5 +274,6 @@ def main():
             g.contar_votantes_por_criterio()
             
 main()
+
 
 
